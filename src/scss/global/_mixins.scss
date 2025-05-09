@@ -1,0 +1,35 @@
+@mixin vp-1023 {
+  @media (max-width: $vp-tablet) {
+    @content;
+  }
+}
+
+@mixin vp-767 {
+  @media (max-width: $vp-mobile) {
+    @content;
+  }
+}
+
+@mixin retina {
+  @media (min-resolution: 2dppx) {
+    @content;
+  }
+}
+
+@mixin vp-1023-retina {
+  @media (max-width: $vp-tablet) and (min-resolution: 2dppx) {
+    @content;
+  }
+}
+
+@mixin vp-767-retina {
+  @media (max-width: $vp-mobile) and (min-resolution: 2dppx) {
+    @content;
+  }
+}
+
+@mixin arc {
+  border: 1px solid $color-fallow;
+  border-radius: 600px 600px 0 0;
+  border-bottom: none;
+}
