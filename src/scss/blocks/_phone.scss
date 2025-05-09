@@ -27,7 +27,12 @@
     
 
     &__screen {
-        width: 80%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 24px;
+        letter-spacing: 0.2em;
+        width: 100%;
         height: 80px;
         background-color: $color-trout;
 
@@ -36,7 +41,15 @@
         }
     }
 
-    &__buttons {
+    &__buttons-wrapper {
+        display: flex;
+        align-self: flex-start;
+        gap: 20px;
+        align-items: center;
+    }
+
+    &__numpad {
+        align-self: flex-start;
         display: grid;
         grid-template-columns: repeat(3, 80px);
         gap: 10px;
@@ -48,6 +61,28 @@
             grid-template-columns: repeat(3, 50px);
         }
     }
+
+    &__control-button {
+        align-self: flex-start;
+        background-color: transparent;
+        aspect-ratio: 1;
+        color: inherit;
+        width: 80px;
+        height: 80px;
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 20px;
+        border: 1px solid $color-white;
+        cursor: pointer;
+
+        &:hover {
+            background-color: $color-white;
+            color: $color-trout;
+        }
+    }
+
 
     &__button {
         aspect-ratio: 1;
