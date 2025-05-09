@@ -1,5 +1,6 @@
 import './scss/styles.scss';
 import clickSound from './assets/click.mp3';
+import { playTone, stopTone, clearTones } from './audio';
 
 const buttonClick = new Audio(clickSound);
 
@@ -10,9 +11,9 @@ enum PhoneState {
 }
 
 class Phone {
-    pickButton: Element | null;
-    hangButton: Element | null;
-    callButton: Element | null;
+    pickButton: HTMLElement | null;
+    hangButton: HTMLElement | null;
+    callButton: HTMLElement | null;
     numpad: NodeListOf<Element>;
     private _screen: Element | null;
     private _state: PhoneState;
@@ -26,7 +27,20 @@ class Phone {
         this._screen = document.querySelector('.phone__screen');
 
         this._state = PhoneState.HANG;
+        this.hangButton?.classList.add('phone__control-button--disabled')
+        this.callButton?.classList.add('phone__control-button--disabled')
 
+        this.pickButton?.addEventListener('click', () => {
+            phone.state = PhoneState.IDLE
+            this.hangButton?.classList.remove('phone__control-button--disabled')
+            playTone('pick');
+            this.pickButton?.classList.add('phone__pick-button--active');
+        });
+
+        this.hangButton?.addEventListener('click', () => {
+            stopTone('pick');
+            phone.reset();
+        });
 
         this.callButton?.addEventListener('click', () => {
             if (this.state === 'idle') {
@@ -34,23 +48,18 @@ class Phone {
                 console.log('Calling...');
             }
         });
-
-        this.hangButton?.addEventListener('click', () => {
-            phone.state = PhoneState.HANG;
-        });
-
-        this.pickButton?.addEventListener('click', () => {
-            phone.state = PhoneState.IDLE
-        });
     }
+
     get screen(): string | null {
         return this._screen?.textContent ?? null;
     }
+
     set screen(text: string) {
         if (this._screen) {
             this._screen.textContent += text;
         }
     }
+
     set state(newState: PhoneState) {
         this._state = newState;
         console.log(`Phone state changed to: ${this.state}`);
@@ -62,9 +71,13 @@ class Phone {
 
     reset() {
         this.state = PhoneState.HANG;
+        clearTones();
         if (this._screen) {
             this._screen.textContent = '';
         }
+        this.pickButton?.classList.remove('phone__pick-button--active');
+        this.hangButton?.classList.add('phone__control-button--disabled')
+        this.callButton?.classList.add('phone__control-button--disabled')
     }
 }
 
@@ -77,17 +90,12 @@ phone.numpad.forEach((button) => {
     });
 });
 
-phone.hangButton?.addEventListener('click', () => {
-    phone.reset();
-});
-
-
-
 function handleNumpadClick(button: Element) {
     if (phone.state === 'hang') {
         buttonClick.play();
     }
     if (phone.state === 'idle') {
+        playTone(button.textContent || '');
         console.log(`Button clicked: ${button.textContent}`);
         if (phone.screen !== null) {
             phone.screen = `${button.textContent}`;
