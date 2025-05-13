@@ -9,11 +9,13 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@types/pizzicato": "^0.6.4",
     "sass": "^1.87.0",
     "typescript": "~5.8.3",
     "vite": "^6.3.5"
   },
   "dependencies": {
-    "pizzicato": "^0.6.4"
+    "pizzicato": "^0.6.4",
+    "tone": "^15.1.22"
   }
 }

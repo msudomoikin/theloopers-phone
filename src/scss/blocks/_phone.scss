@@ -24,7 +24,7 @@
         font-weight: lighter;
         margin: 0;
     }
-    
+
 
     &__screen {
         display: flex;
@@ -35,6 +35,9 @@
         width: 100%;
         height: 80px;
         background-color: $color-trout;
+        border-radius: 20px;
+        padding: 0 20px;
+        flex-wrap: wrap;
 
         @include vp-767 {
             height: 50px;
@@ -46,19 +49,37 @@
         align-self: flex-start;
         gap: 20px;
         align-items: center;
+
+        @include vp-767 {
+            gap: 10px;
+        }
+    }
+
+    &__numpad-book-wrapper {
+        display: flex;
+        width: 100%;
+        flex-direction: row;
+        gap: 20px;
+        align-items: flex-start;
+        justify-content: space-between;
+
+        @include vp-767 {
+            gap: 10px;
+        }
     }
 
     &__numpad {
-        align-self: flex-start;
         display: grid;
         grid-template-columns: repeat(3, 80px);
-        gap: 10px;
+        column-gap: 10px;
+        row-gap: 20px;
         padding: 0;
         margin: 0;
         list-style: none;
 
         @include vp-767 {
             grid-template-columns: repeat(3, 50px);
+            align-self: center;
         }
     }
 
@@ -67,8 +88,8 @@
         background-color: transparent;
         aspect-ratio: 1;
         color: inherit;
-        width: 80px;
-        height: 80px;
+        width: 100px;
+        height: 60px;
         text-align: center;
         display: flex;
         justify-content: center;
@@ -81,6 +102,24 @@
             background-color: $color-white;
             color: $color-trout;
         }
+
+        @include vp-767 {
+            width: 80px;
+            height: 40px;
+        }
+        &--disabled {
+            opacity: .4;
+            pointer-events: none;
+        }
+    }
+
+    &__pick-button--active {
+        border: none;
+        background-color: $color-white-50;
+        color: $color-blue-charcoa;
+        pointer-events: none;
+        cursor: disabled;
+
     }
 
 

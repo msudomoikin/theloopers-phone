@@ -1,0 +1,31 @@
+.phonebook {
+    &__list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        gap: 10px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    &__item {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    &__item-title {
+        font-size: 24px;
+        font-family: monospace;
+        font-weight: lighter;
+        margin: 0;
+    }
+
+    &__item-number {
+        font-size: 24px;
+        font-family: monospace;
+        font-weight: lighter;
+        margin: 0;
+    }
+
+}

@@ -1,7 +1,11 @@
 import './scss/styles.scss';
 import clickSound from './assets/click.mp3';
-import { playTone, stopTone, clearTones } from './audio';
+import { tonePlayer } from './TonePlayer';
+import { phonebook } from './phonebook';
+import { findMatchingCountry } from './utils';
+const MAX_DIAL_DURATION = 3000;
 
+const numpadContainer = document.querySelector('.phone__numpad');
 const buttonClick = new Audio(clickSound);
 
 enum PhoneState {
@@ -33,19 +37,45 @@ class Phone {
         this.pickButton?.addEventListener('click', () => {
             phone.state = PhoneState.IDLE
             this.hangButton?.classList.remove('phone__control-button--disabled')
-            playTone('pick');
+            tonePlayer.playIdleTone(); // если добавим такой метод ниже
             this.pickButton?.classList.add('phone__pick-button--active');
         });
 
         this.hangButton?.addEventListener('click', () => {
-            stopTone('pick');
+            tonePlayer.stopAll()
             phone.reset();
         });
 
         this.callButton?.addEventListener('click', () => {
-            if (this.state === 'idle') {
+            if (this.state === PhoneState.IDLE) {
+                tonePlayer.stopAll();
+
                 phone.state = PhoneState.CALL;
-                console.log('Calling...');
+                const number = this.screen || '';
+                const matchingCountry = findMatchingCountry(number);
+
+
+                if (!matchingCountry) {
+                    console.warn('No matching country found for the number:', number);
+                    return;
+                }
+
+                const dialTone = phonebook[matchingCountry]?.dialTone;
+                
+                if (!dialTone) {
+                    console.warn(`Dial tone not found for country: ${matchingCountry}`);
+                    return;
+                }
+
+                tonePlayer.playPattern(dialTone.hz, dialTone.on, dialTone.off);
+
+                // setTimeout(() => {
+                //     console.log('Maximum dial duration reached. Hanging up.');
+                //     tonePlayer.stopPattern(); // или stopAll()
+                //     phone.reset();
+                // }, MAX_DIAL_DURATION);
+
+                this.callButton?.classList.add('phone__control-button--disabled');
             }
         });
     }
@@ -57,6 +87,7 @@ class Phone {
     set screen(text: string) {
         if (this._screen) {
             this._screen.textContent += text;
+            this.callButton?.classList.remove('phone__control-button--disabled');
         }
     }
 
@@ -71,7 +102,8 @@ class Phone {
 
     reset() {
         this.state = PhoneState.HANG;
-        clearTones();
+        tonePlayer.stopAll();
+        
         if (this._screen) {
             this._screen.textContent = '';
         }
@@ -83,22 +115,27 @@ class Phone {
 
 const phone = new Phone();
 
-phone.numpad.forEach((button) => {
-    //TODO change to event delegation
-    button.addEventListener('click', () => {
-        handleNumpadClick(button);
-    });
+numpadContainer?.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    const buttonEl = target.closest('.phone__button');
+
+    if (buttonEl) {
+        handleNumpadClick(buttonEl);
+    }
 });
 
 function handleNumpadClick(button: Element) {
     if (phone.state === 'hang') {
         buttonClick.play();
     }
+
     if (phone.state === 'idle') {
-        playTone(button.textContent || '');
-        console.log(`Button clicked: ${button.textContent}`);
+        const buttonText = button.textContent || '';
+        tonePlayer.playDtmfTone(buttonText); // stopAll внутри playDtmfTone
+
+        console.log(`Button clicked: ${buttonText}`);
         if (phone.screen !== null) {
-            phone.screen = `${button.textContent}`;
+            phone.screen = `${buttonText}`;
         }
     }
 }
