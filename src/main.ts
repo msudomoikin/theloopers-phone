@@ -3,7 +3,7 @@ import clickSound from './assets/click.mp3';
 import { tonePlayer } from './TonePlayer';
 import { phonebook } from './phonebook';
 import { findMatchingCountry } from './utils';
-const MAX_DIAL_DURATION = 3000;
+// const MAX_DIAL_DURATION = 3000;
 const NUMPAD_BUTTONS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '#', '*']
 
 const numpadContainer = document.querySelector('.phone__numpad');
