@@ -4,6 +4,7 @@ import { tonePlayer } from './TonePlayer';
 import { phonebook } from './phonebook';
 import { findMatchingCountry } from './utils';
 const MAX_DIAL_DURATION = 3000;
+const NUMPAD_BUTTONS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '#', '*']
 
 const numpadContainer = document.querySelector('.phone__numpad');
 const buttonClick = new Audio(clickSound);
@@ -37,12 +38,11 @@ class Phone {
         this.pickButton?.addEventListener('click', () => {
             phone.state = PhoneState.IDLE
             this.hangButton?.classList.remove('phone__control-button--disabled')
-            tonePlayer.playIdleTone(); // если добавим такой метод ниже
             this.pickButton?.classList.add('phone__pick-button--active');
+            tonePlayer.playIdleTone();
         });
 
         this.hangButton?.addEventListener('click', () => {
-            tonePlayer.stopAll()
             phone.reset();
         });
 
@@ -61,7 +61,7 @@ class Phone {
                 }
 
                 const dialTone = phonebook[matchingCountry]?.dialTone;
-                
+
                 if (!dialTone) {
                     console.warn(`Dial tone not found for country: ${matchingCountry}`);
                     return;
@@ -103,7 +103,7 @@ class Phone {
     reset() {
         this.state = PhoneState.HANG;
         tonePlayer.stopAll();
-        
+
         if (this._screen) {
             this._screen.textContent = '';
         }
@@ -130,12 +130,33 @@ function handleNumpadClick(button: Element) {
     }
 
     if (phone.state === 'idle') {
-        const buttonText = button.textContent || '';
-        tonePlayer.playDtmfTone(buttonText); // stopAll внутри playDtmfTone
+        const buttonText = button.textContent;
+
+        if (buttonText) {
+            tonePlayer.playDtmfTone(buttonText);
+        }
 
         console.log(`Button clicked: ${buttonText}`);
-        if (phone.screen !== null) {
+
+        if (phone.screen) {
             phone.screen = `${buttonText}`;
         }
     }
 }
+
+document.addEventListener('keyup', event => {
+
+    if (phone.state === 'hang') {
+        buttonClick.play();
+    }
+
+    if (phone.state === 'idle' && NUMPAD_BUTTONS.includes(event.key)) {
+        const buttonText = event.key;
+        tonePlayer.playDtmfTone(event.key); // stopAll внутри playDtmfTone
+
+        console.log(`Physical Button clicked: ${buttonText}`);
+        if (phone.screen !== null) {
+            phone.screen = `${buttonText}`;
+        }
+    }
+})
