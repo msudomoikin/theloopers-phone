@@ -4,49 +4,36 @@ class TonePlayer {
     private oscillator1?: Tone.Oscillator;
     private oscillator2?: Tone.Oscillator;
     private patternInterval: number | null = null;
-
+    private patternOscillator1?: Tone.Oscillator;
+    private patternOscillator2?: Tone.Oscillator;
 
 
     playIdleTone() {
         this.stopAll();
-        this.playSingleTone(350, Infinity);
+        this.playSingleTone(350);
     }
 
-    playSingleTone(hz: number, durationMs: number = Infinity): void {
+    playSingleTone(hz: number): void {
         this.stopAll();
 
         this.oscillator1 = new Tone.Oscillator(hz, 'sine').toDestination();
+
         this.oscillator1.volume.value = -12;
         this.oscillator1.start();
-
-        if (durationMs < Infinity) {
-            setTimeout(() => {
-                this.oscillator1?.stop().dispose();
-                this.oscillator1 = undefined;
-            }, durationMs);
-        }
     }
 
-    playDualTone(freq1: number, freq2: number, durationMs: number = 350): void {
+    playDualTone(freq1: number, freq2: number): void {
         this.stopAll();
 
         this.oscillator1 = new Tone.Oscillator(freq1, 'sine').toDestination();
         this.oscillator2 = new Tone.Oscillator(freq2, 'sine').toDestination();
-
         this.oscillator1.volume.value = -12;
         this.oscillator2.volume.value = -12;
 
         this.oscillator1.start();
         this.oscillator2.start();
 
-        if (durationMs > 0) {
-            setTimeout(() => this.stopAll(), durationMs);
-        }
     }
-
-    private patternOscillator1?: Tone.Oscillator;
-    private patternOscillator2?: Tone.Oscillator;
-
 
     playPattern(hz: number[], onDuration: number, offDuration: number): void {
         this.stopAll();
@@ -78,13 +65,11 @@ class TonePlayer {
 
 
     playDtmfTone(buttonText: string) {
-        this.stopAll();
-
         const frequencies = this.getDTMFFrequency(buttonText);
         if (typeof frequencies === 'number') {
-            this.playSingleTone(frequencies, 350);
+            this.playSingleTone(frequencies);
         } else {
-            this.playDualTone(frequencies[0], frequencies[1], 350);
+            this.playDualTone(frequencies[0], frequencies[1]);
         }
     }
 

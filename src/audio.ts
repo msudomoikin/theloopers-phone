@@ -3,7 +3,6 @@ import { phonebook } from './phonebook';
 import { findMatchingCountry } from './utils';
 
 const MAX_DIAL_DURATION = 3000;
-const BUTTON_TONE_DURATION = 350;
 
 function getFrequencyFromButton(buttonText: string): [number, number] | number {
     const map: Record<string, [number, number] | number> = {
@@ -29,9 +28,9 @@ export function playTone(button: string): void {
     const freq = getFrequencyFromButton(button);
 
     if (typeof freq === 'number') {
-        tonePlayer.playSingleTone(freq, BUTTON_TONE_DURATION);
+        tonePlayer.playSingleTone(freq);
     } else {
-        tonePlayer.playDualTone(freq[0], freq[1], BUTTON_TONE_DURATION);
+        tonePlayer.playDualTone(freq[0], freq[1]);
     }
 }
 
