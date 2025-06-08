@@ -1,7 +1,10 @@
 import './scss/styles.scss';
 import clickSound from './assets/click.mp3';
-import { tonePlayer } from './TonePlayer';
+// import { tonePlayer } from './TonePlayer';
 import { phone } from './Phone';
+import { tonePlayerVanilla as tonePlayer } from './TonePlayerVanilla';
+import { getDTMFFrequency } from './dtmfFrequncies';
+
 
 let buttonIsPressed: boolean = false
 const NUMPAD_BUTTONS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '#', '*']
@@ -32,6 +35,7 @@ numpadContainer?.addEventListener('touchstart', (e) => {
     }
 });
 
+// mouse click on button
 
 function handleNumpadClick(button: Element) {
     if (phone.state === 'hang') {
@@ -42,7 +46,7 @@ function handleNumpadClick(button: Element) {
         const buttonText = button.textContent;
 
         if (buttonText) {
-            tonePlayer.playDtmfTone(buttonText);
+            tonePlayer.start(getDTMFFrequency(buttonText));
         }
 
         console.log(`Button clicked: ${buttonText}`);
@@ -52,6 +56,8 @@ function handleNumpadClick(button: Element) {
         }
     }
 }
+
+// click on physical button
 document.addEventListener('keydown', event => {
 
     if (!NUMPAD_BUTTONS.includes(event.key)) {
@@ -67,8 +73,7 @@ document.addEventListener('keydown', event => {
         buttonIsPressed = true;
 
         const buttonText = event.key;
-        tonePlayer.playDtmfTone(event.key);
-
+        tonePlayer.start(getDTMFFrequency(event.key));
         console.log(`Physical Button clicked: ${buttonText}`);
 
     }

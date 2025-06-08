@@ -1,11 +1,13 @@
 
 import { phonebook } from './phonebook';
 import { findMatchingCountry } from './utils';
-import { tonePlayer } from './TonePlayer';
+// import { tonePlayer } from './TonePlayer';
+import { tonePlayerVanilla as tonePlayer } from './TonePlayerVanilla';
 
 enum PhoneState {
     HANG = 'hang',
     IDLE = 'idle',
+    DIALING = 'dialing',
     CALL = 'call',
 }
 
@@ -61,7 +63,7 @@ class Phone {
                     return;
                 }
 
-                tonePlayer.playPattern(dialTone.hz, dialTone.on, dialTone.off);
+                // tonePlayer.playPattern(dialTone.hz, dialTone.on, dialTone.off);
 
                 this.callButton?.classList.add('phone__control-button--disabled');
             }
