@@ -14,6 +14,7 @@ class TonePlayer {
     private modulatorOsc: OscillatorNode | null = null;
     private gainNode: GainNode | null = null;
     private modulatorGain: GainNode | null = null;
+    private carrierGain: GainNode | null = null;
     private filter: BiquadFilterNode | null = null;
     private isPlaying: boolean = false;
     private patternTimeout: NodeJS.Timeout | null = null;
@@ -28,14 +29,13 @@ class TonePlayer {
     private setup(freq1: number, freq2?: number, isModulated: boolean = false): void {
         // Create oscillators
         this.osc1 = this.context.createOscillator();
+        this.osc1.type = 'sine';
+        this.osc1.frequency.value = freq1;
+
         if (freq2 && freq2 > 0) {
             this.osc2 = this.context.createOscillator();
-        }
-
-        // Set frequencies
-        this.osc1.frequency.value = freq1;
-        if (this.osc2) {
-            this.osc2.frequency.value = freq2!;
+            this.osc2.type = 'sine';
+            this.osc2.frequency.value = freq2;
         }
 
         // Create gain node with initial value of 0 (silent start)
@@ -49,15 +49,27 @@ class TonePlayer {
 
         if (isModulated && this.osc2) {
             // Set up amplitude modulation
+            // osc1 = carrier, osc2 = modulator
+            
+            // Create modulator gain for controlling modulation depth
             this.modulatorGain = this.context.createGain();
             this.modulatorGain.gain.value = 0.95; // 95% modulation index
             
-            // Connect modulator to carrier frequency
-            this.osc2.connect(this.modulatorGain);
-            this.modulatorGain.connect(this.osc1.frequency);
+            // Create carrier gain for base amplitude
+            this.carrierGain = this.context.createGain();
+            this.carrierGain.gain.value = 0.5; // Base carrier amplitude
             
-            // Connect carrier through gain control to output
-            this.osc1.connect(this.gainNode);
+            // Connect modulator to modulator gain
+            this.osc2.connect(this.modulatorGain);
+            
+            // Connect carrier to carrier gain
+            this.osc1.connect(this.carrierGain);
+            
+            // Connect modulator gain to carrier gain's gain parameter for AM
+            this.modulatorGain.connect(this.carrierGain.gain);
+            
+            // Connect modulated carrier to main gain
+            this.carrierGain.connect(this.gainNode);
         } else {
             // Connect audio graph for single freq or mixture
             this.osc1.connect(this.gainNode);
@@ -66,8 +78,8 @@ class TonePlayer {
             }
         }
         
-        this.gainNode.connect(this.context.destination);
-        // this.filter.connect(this.context.destination);
+        this.gainNode.connect(this.filter);
+        this.filter.connect(this.context.destination);
 
         // Start oscillators (but they're silent due to gain = 0)
         this.osc1.start(0);
@@ -136,6 +148,7 @@ class TonePlayer {
                 this.modulatorOsc = null;
                 this.gainNode = null;
                 this.modulatorGain = null;
+                this.carrierGain = null;
                 this.filter = null;
                 this.isPlaying = false;
             }, (fadeTime + 0.01) * 1000);
@@ -256,6 +269,7 @@ class TonePlayer {
             
             this.gainNode = null;
             this.modulatorGain = null;
+            this.carrierGain = null;
             this.filter = null;
             this.isPlaying = false;
         }
