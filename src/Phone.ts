@@ -1,6 +1,5 @@
 
-import { phonebook } from './phonebook';
-import { findMatchingCountry } from './utils';
+import { findRingingTone } from './utils';
 // import { tonePlayer } from './TonePlayer';
 import { tonePlayerVanilla as tonePlayer } from './TonePlayerVanilla';
 
@@ -48,23 +47,18 @@ class Phone {
 
                 phone.state = PhoneState.CALL;
                 const number = this.screen || '';
-                const matchingCountry = findMatchingCountry(number);
+                const ringingTone = findRingingTone(number);
 
 
-                if (!matchingCountry) {
-                    console.warn('No matching country found for the number:', number);
+                if (!ringingTone) {
+                    console.warn('No matching ringing tone found for the number:', number);
+                    this.reset()
                     return;
                 }
 
-                const dialTone = phonebook[matchingCountry]?.dialTone;
 
-                if (!dialTone) {
-                    console.warn(`Dial tone not found for country: ${matchingCountry}`);
-                    return;
-                }
-
-                // tonePlayer.playPattern(dialTone.hz, dialTone.on, dialTone.off);
-
+                tonePlayer.playPattern(ringingTone);
+                this.callButton?.classList.remove('phone__control-button--active');
                 this.callButton?.classList.add('phone__control-button--disabled');
             }
         });
@@ -102,8 +96,5 @@ class Phone {
         this.callButton?.classList.add('phone__control-button--disabled')
     }
 }
-
-
-
 
 export const phone = new Phone();
