@@ -66,8 +66,8 @@ class TonePlayer {
             }
         }
         
-        this.gainNode.connect(this.filter);
-        this.filter.connect(this.context.destination);
+        this.gainNode.connect(this.context.destination);
+        // this.filter.connect(this.context.destination);
 
         // Start oscillators (but they're silent due to gain = 0)
         this.osc1.start(0);
