@@ -4,7 +4,8 @@ import clickSound from './assets/click.mp3';
 import { phone } from './Phone';
 import { tonePlayerVanilla as tonePlayer } from './TonePlayerVanilla';
 import { getDTMFFrequency } from './dtmfFrequncies';
-
+import { Phonebook } from './Phonebook';
+import { isTouchDevice } from './utils';
 
 let buttonIsPressed: boolean = false
 const NUMPAD_BUTTONS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '#', '*']
@@ -12,8 +13,9 @@ const NUMPAD_BUTTONS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '
 const numpadContainer = document.querySelector('.phone__numpad');
 const buttonClick = new Audio(clickSound);
 
-
 numpadContainer?.addEventListener('mousedown', (e) => {
+    if (isTouchDevice()) return
+
     const target = e.target as HTMLElement;
     const buttonEl = target.closest('.phone__button');
 
@@ -36,8 +38,8 @@ numpadContainer?.addEventListener('touchstart', (e) => {
 });
 
 // mouse click on button
-
 function handleNumpadClick(button: Element) {
+
     if (phone.state === 'hang') {
         buttonClick.play();
     }
@@ -60,9 +62,9 @@ function handleNumpadClick(button: Element) {
 // click on physical button
 document.addEventListener('keydown', event => {
 
-    if (!NUMPAD_BUTTONS.includes(event.key)) {
-        return
-    }
+    if (isTouchDevice()) return
+    console.log(isTouchDevice());
+    if (!NUMPAD_BUTTONS.includes(event.key)) return
 
     if (phone.state === 'hang' && !buttonIsPressed) {
         buttonIsPressed = true;
@@ -80,10 +82,14 @@ document.addEventListener('keydown', event => {
 });
 
 document.addEventListener('keyup', event => {
+    if (isTouchDevice()) return
+
     buttonIsPressed = false;
     if (phone.screen !== null && phone.state === 'idle' && NUMPAD_BUTTONS.includes(event.key)) {
         phone.screen = `${event.key}`;
     }
     tonePlayer.stopAll();
-
 })
+
+const phonebook = new Phonebook()
+phonebook.render('.phonebook')
