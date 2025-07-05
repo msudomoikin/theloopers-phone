@@ -4,24 +4,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>the Loopers' phone</title>
+  <title>Looperphone</title>
+  <script type="module" src="/src/main.ts"></script>
 </head>
 
 <body>
   <main>
     <div class="container">
       <div class="phone">
-        <div class="phone__title-wrapper">
-          <h1 class="phone__title">the Loopers' phone</h1>
+        <!-- <div class="phone__title-wrapper">
+          <h1 class="phone__title">Looperphone</h1>
           <h2 class="phone__subtitle">connecting the world</h2>
-        </div>
+          <div class="phone__description-wrapper">
+            <p class="phone__description">Enter country code and press dial</p>
+            <p class="phone__description">Marvel how different ringing tones can be</p>
+          </div>
+        </div> -->
         <div class="phone__screen"></div>
         <div class="phone__buttons-wrapper">
           <button class="phone__control-button phone__pick-button" type="button">PICK</button>
           <button class="phone__control-button phone__hang-button" type="button">HANG</button>
           <button class="phone__control-button phone__call-button" type="button">CALL</button>
         </div>
-        <div class="phone__numpad-book-wrapper">    
+        <div class="phone__numpad-book-wrapper">
           <ul class="phone__numpad">
             <li class="phone__button"><span class="phone__button-text">1</span></li>
             <li class="phone__button"><span class="phone__button-text">2</span></li>
@@ -36,27 +41,19 @@
             <li class="phone__button"><span class="phone__button-text">0</span></li>
             <li class="phone__button"><span class="phone__button-text">#</span></li>
           </ul>
-          <div class="phonebook">
-            <ul class="phonebook__list">
-              <li class="phonebook__item">
-                <img class="phonebook__item-image"
-                  src=" https://upload.wikimedia.org/wikipedia/commons/3/36/Flag_of_Albania.svg"
-                  alt="Red flag with a black double-headed eagle in the centre." height="10" width="30">
-                <h2 class="phonebook__item-title">Albania</h2>
-                <span class="phonebook__item-number">355</span>
-              </li>
-              <li class="phonebook__item">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/1/19/Flag_of_Andorra.svg" alt="Flag of Andorra.svg" height="10" width="30">
-                <h2 class="phonebook__item-title">Andorra</h2>
-                <span class="phonebook__item-number">376</span>
-              </li>
-            </ul>
-          </div>
+          <details class="phone__collapsible" open>
+            <summary>Phonebook</summary>
+            <div class="phonebook"></div>
+          </details>
         </div>
       </div>
     </div>
   </main>
-  <script type="module" src="/src/main.ts"></script>
+  <footer class="footer">
+    <div class="container">
+      <p class="footer__text"><span>LOOPERPHONE</span>, made by "The Loopers" — Daniil Baronov and Matvey Sudomoykin</p>
+    </div>
+  </footer>
 </body>
 
 </html>
