@@ -5,6 +5,7 @@
 }
 
 body {
+  touch-action: manipulation;
   background-color: $color-blue-charcoa;
   color: $color-white;
   font-weight: 300;

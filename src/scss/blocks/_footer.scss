@@ -1,0 +1,14 @@
+.footer {
+    &__text {
+        font-size: 16px;
+        font-family: monospace;
+        font-weight: lighter;
+        margin: 0;
+        margin-bottom: 20px;
+
+        & span {
+            font-size: 20px;
+            font-weight: bolder;
+        }
+    }
+}

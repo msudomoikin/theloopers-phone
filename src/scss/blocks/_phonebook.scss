@@ -1,4 +1,8 @@
 .phonebook {
+    min-width: 280px;
+    max-width: 400px;
+    align-self: center;
+
     &__list {
         margin: 0;
         padding: 0;
@@ -11,13 +15,33 @@
     &__item {
         display: flex;
         gap: 10px;
-        align-items: center;
+        align-items: flex-start;
+        justify-content: space-between;
+        overflow: hidden;
+
+
+        @include vp-767 {}
+    }
+
+    &__flag-title-wrapper {
+        display: flex;
+        gap: 20px;
+        flex-direction: row;
+        position: relative;
+
+        &::after {
+            position: absolute;
+            left: 60px;
+            content: '..................................................';
+            z-index: -1;
+        }
     }
 
     &__item-title {
         font-size: 24px;
-        font-family: monospace;
         font-weight: lighter;
+        padding-right: 20px;
+        background-color: $color-blue-charcoa;
         margin: 0;
     }
 
@@ -26,6 +50,8 @@
         font-family: monospace;
         font-weight: lighter;
         margin: 0;
+        padding-left: 20px;
+        background-color: $color-blue-charcoa;
     }
 
 }
