@@ -50,24 +50,24 @@ class TonePlayer {
         if (isModulated && this.osc2) {
             // Set up amplitude modulation
             // osc1 = carrier, osc2 = modulator
-            
+
             // Create modulator gain for controlling modulation depth
             this.modulatorGain = this.context.createGain();
             this.modulatorGain.gain.value = 0.95; // 95% modulation index
-            
+
             // Create carrier gain for base amplitude
             this.carrierGain = this.context.createGain();
             this.carrierGain.gain.value = 0.5; // Base carrier amplitude
-            
+
             // Connect modulator to modulator gain
             this.osc2.connect(this.modulatorGain);
-            
+
             // Connect carrier to carrier gain
             this.osc1.connect(this.carrierGain);
-            
+
             // Connect modulator gain to carrier gain's gain parameter for AM
             this.modulatorGain.connect(this.carrierGain.gain);
-            
+
             // Connect modulated carrier to main gain
             this.carrierGain.connect(this.gainNode);
         } else {
@@ -77,7 +77,7 @@ class TonePlayer {
                 this.osc2.connect(this.gainNode);
             }
         }
-        
+
         this.gainNode.connect(this.filter);
         this.filter.connect(this.context.destination);
 
@@ -97,7 +97,7 @@ class TonePlayer {
             const now = this.context.currentTime;
             this.osc1.frequency.setValueAtTime(this.osc1.frequency.value, now);
             this.osc1.frequency.linearRampToValueAtTime(freqArray[0], now + 0.005);
-            
+
             this.osc2.frequency.setValueAtTime(this.osc2.frequency.value, now);
             this.osc2.frequency.linearRampToValueAtTime(freqArray[1], now + 0.005);
             return;
@@ -105,14 +105,17 @@ class TonePlayer {
 
         // Stop any existing tone
         this.stopAll();
-        
+
         // Create new tone
         this.setup(freqArray[0], freqArray[1]);
-        
+
+        // DTMF tones are mixed frequencies - reduce volume
+        const targetVolume = 0.15;
+
         // Smooth fade in to prevent clicks
         const now = this.context.currentTime;
         this.gainNode!.gain.setValueAtTime(0, now);
-        this.gainNode!.gain.linearRampToValueAtTime(0.25, now + 0.005); // 5ms fade in
+        this.gainNode!.gain.linearRampToValueAtTime(targetVolume, now + 0.005); // 5ms fade in
     }
 
     stopAll(): void {
@@ -125,11 +128,11 @@ class TonePlayer {
         if (this.isPlaying && this.gainNode) {
             const now = this.context.currentTime;
             const fadeTime = 0.005; // 5ms fade out
-            
+
             // Smooth fade out to prevent clicks
             this.gainNode.gain.setValueAtTime(this.gainNode.gain.value, now);
             this.gainNode.gain.linearRampToValueAtTime(0, now + fadeTime);
-            
+
             // Stop oscillators after fade out completes
             if (this.osc1) {
                 this.osc1.stop(now + fadeTime + 0.001);
@@ -140,7 +143,7 @@ class TonePlayer {
             if (this.modulatorOsc) {
                 this.modulatorOsc.stop(now + fadeTime + 0.001);
             }
-            
+
             // Clean up references
             setTimeout(() => {
                 this.osc1 = null;
@@ -164,13 +167,13 @@ class TonePlayer {
         return elements.map(element => {
             const noRepeat = element.startsWith('!');
             const cleanElement = noRepeat ? element.slice(1) : element;
-            
+
             const [freqPart, durationStr] = cleanElement.split('/');
             const duration = durationStr ? parseInt(durationStr, 10) : 1000; // Default 1s
-            
+
             let frequencies: number[] = [];
             let modulated = false;
-            
+
             if (freqPart.includes('*')) {
                 // Modulated frequency (f1*f2)
                 frequencies = freqPart.split('*').map(f => parseInt(f, 10));
@@ -184,7 +187,7 @@ class TonePlayer {
                 frequencies = [parseInt(freqPart, 10)];
                 modulated = false;
             }
-            
+
             return {
                 frequencies,
                 modulated,
@@ -198,10 +201,10 @@ class TonePlayer {
         this.stopAll();
         this.currentPattern = this.parseTonePattern(pattern);
         this.patternIndex = 0;
-        
+
         // Check if pattern should repeat (only if ALL elements have !)
         this.shouldRepeat = !this.currentPattern.every(element => element.noRepeat);
-        
+
         this.playNextElement();
     }
 
@@ -216,7 +219,7 @@ class TonePlayer {
         }
 
         const element = this.currentPattern[this.patternIndex];
-        
+
         if (element.frequencies[0] === 0) {
             // Silence
             this.stopCurrentTone();
@@ -234,26 +237,36 @@ class TonePlayer {
 
     private playToneElement(element: ToneElement): void {
         this.stopCurrentTone();
-        
+
         const freq1 = element.frequencies[0];
         const freq2 = element.frequencies[1] || 0;
-        
+
         this.setup(freq1, freq2, element.modulated);
-        
+
+        // Adjust volume based on tone type
+        let targetVolume = 0.25;
+        if (!element.modulated && freq2 > 0) {
+            // Mixed frequencies - reduce volume to prevent doubling
+            targetVolume = 0.15;
+        } else if (element.modulated) {
+            // Modulated tones - increase volume to compensate for AM reduction
+            targetVolume = 0.35;
+        }
+
         // Smooth fade in to prevent clicks
         const now = this.context.currentTime;
         this.gainNode!.gain.setValueAtTime(0, now);
-        this.gainNode!.gain.linearRampToValueAtTime(0.25, now + 0.005);
+        this.gainNode!.gain.linearRampToValueAtTime(targetVolume, now + 0.005);
     }
 
     private stopCurrentTone(): void {
         if (this.isPlaying && this.gainNode) {
             const now = this.context.currentTime;
             const fadeTime = 0.005;
-            
+
             this.gainNode.gain.setValueAtTime(this.gainNode.gain.value, now);
             this.gainNode.gain.linearRampToValueAtTime(0, now + fadeTime);
-            
+
             if (this.osc1) {
                 this.osc1.stop(now + fadeTime + 0.001);
                 this.osc1 = null;
@@ -266,7 +279,7 @@ class TonePlayer {
                 this.modulatorOsc.stop(now + fadeTime + 0.001);
                 this.modulatorOsc = null;
             }
-            
+
             this.gainNode = null;
             this.modulatorGain = null;
             this.carrierGain = null;
