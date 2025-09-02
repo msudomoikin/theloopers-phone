@@ -1,11 +1,9 @@
 """
 Keypad Controller for Looperphone
-Handles matrix keypad input with DTMF tone generation
+Handles matrix keypad input with DTMF tone generation using PyAudio
 """
 import time
 import RPi.GPIO as GPIO
-import sounddevice as sd
-import numpy as np
 
 # Keypad matrix configuration
 ROWS = [0, 5, 6, 13]      # GPIO pins for rows
@@ -55,27 +53,23 @@ class KeypadController:
     def generate_dtmf_tone(self, freq1, freq2, duration=0.2):
         """One-shot DTMF generation (blocking small beep)."""
         try:
-            t = np.linspace(0, duration, int(self.sample_rate * duration))
-            tone1 = np.sin(2 * np.pi * freq1 * t) * 0.3
-            tone2 = np.sin(2 * np.pi * freq2 * t) * 0.3
-            combined = (tone1 + tone2) / 2
-            sd.play(combined, self.sample_rate)
-            sd.wait()
+            if self.tone_generator:
+                self.tone_generator.play_tone(freq1, duration)  # Simple fallback
+            else:
+                # Fallback without tone generator (not recommended)
+                print(f"Warning: No tone generator available for DTMF {freq1}Hz, {freq2}Hz")
         except Exception as e:
             print(f"DTMF tone error: {e}")
 
     def start_idle_tone(self, frequency=440, amplitude=0.3, length=5.0):
-        """Play idle tone with shorter buffer for faster start."""
+        """Play idle tone using tone generator."""
         try:
-            sd.stop()
             if self.tone_generator:
-                tone = self.tone_generator.generate_tone(frequency, length, amplitude)
+                self.tone_generator.start_continuous_tone(frequency, amplitude)
+                self._mode = 'idle'
+                print(f"DEBUG: Idle tone started at {frequency}Hz")
             else:
-                t = np.linspace(0, length, int(self.sample_rate * length))
-                tone = np.sin(2 * np.pi * frequency * t) * amplitude
-            # Use non-blocking play for immediate start
-            sd.play(tone.astype(np.float32), self.sample_rate, blocking=False, loop=True)
-            self._mode = 'idle'
+                print("Warning: No tone generator available for idle tone")
         except Exception as e:
             print(f"Idle tone error: {e}")
     
@@ -85,20 +79,12 @@ class KeypadController:
             freq1, freq2 = DTMF_TONES[key]
             print(f"DEBUG: Starting key tone for '{key}' ({freq1}Hz, {freq2}Hz)")
             try:
-                sd.stop()
-                # Use shorter buffer for faster start - 5 seconds is enough and will be stopped manually
-                length = 5.0  # shorter buffer for faster generation
                 if self.tone_generator:
-                    tone = self.tone_generator.generate_dual_tone(freq1, freq2, length, amplitude=0.3)
+                    self.tone_generator.play_dtmf_tone_continuous(freq1, freq2, amplitude=0.3)
+                    self._mode = 'key'
+                    print(f"DEBUG: Key tone started for '{key}'")
                 else:
-                    t = np.linspace(0, length, int(self.sample_rate * length))
-                    tone1 = np.sin(2 * np.pi * freq1 * t) * 0.3
-                    tone2 = np.sin(2 * np.pi * freq2 * t) * 0.3
-                    tone = (tone1 + tone2) / 2
-                # Use non-blocking play so it starts immediately
-                sd.play(tone.astype(np.float32), self.sample_rate, blocking=False)
-                self._mode = 'key'
-                print(f"DEBUG: Key tone started for '{key}'")
+                    print(f"Warning: No tone generator available for key '{key}'")
             except Exception as e:
                 print(f"Key tone error: {e}")
     
@@ -106,17 +92,23 @@ class KeypadController:
         """Stop current key tone (or any tone)."""
         print("DEBUG: Stopping key tone")
         try:
-            sd.stop()
-            self._mode = None
-            print("DEBUG: Key tone stopped")
+            if self.tone_generator:
+                self.tone_generator.stop_dtmf_tone()
+                self._mode = None
+                print("DEBUG: Key tone stopped")
+            else:
+                print("Warning: No tone generator available to stop")
         except Exception as e:
             print(f"Stop key tone error: {e}")
 
     def stop_any_tone(self):
         """Stop any playing tone."""
         try:
-            sd.stop()
-            self._mode = None
+            if self.tone_generator:
+                self.tone_generator.stop_continuous_tone()
+                self._mode = None
+            else:
+                print("Warning: No tone generator available to stop")
         except Exception as e:
             print(f"Stop tone error: {e}")
     
