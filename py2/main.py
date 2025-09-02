@@ -14,6 +14,9 @@ from countries import get_country_info
 # GPIO Configuration
 HOOK_PIN = 23  # Hook switch (GPIO23 to GND)
 
+# Timeout Configuration
+COUNTRY_CODE_TIMEOUT = 5  # Timeout in seconds for country code input
+
 class LooperPhone:
     def __init__(self):
         # Initialize components
@@ -21,6 +24,9 @@ class LooperPhone:
         self.keypad = KeypadController()
         self.tones = ToneGenerator()
         self.audio = AudioPlayer()
+        
+        # Link keypad to tone generator for idle tone management
+        self.keypad.set_tone_generator(self.tones)
         
         # Setup GPIO for hook switch
         GPIO.setmode(GPIO.BCM)
@@ -44,13 +50,19 @@ class LooperPhone:
     def handle_call(self):
         """Main call handling logic"""
         try:
-            # Show dial tone message and start continuous dial tone
+            # Show dial tone message (idle tone will be started by keypad)
             self.lcd.show_message("Enter country", "code")
-            self.tones.start_continuous_tone(440)  # Russian dial tone
             
-            # Get country code with timeout
-            country_code = self.keypad.get_code(timeout=3)
-            self.tones.stop_continuous_tone()
+            # Get country code with timeout (keypad manages idle tone internally and updates LCD)
+            country_code = self.keypad.get_code(
+                timeout=COUNTRY_CODE_TIMEOUT, 
+                hook_check_func=self.is_hook_off,
+                lcd_controller=self.lcd
+            )
+            
+            # Always stop any tones when exiting get_code
+            self.keypad.stop_any_tone()
+            self.tones.stop_continuous_tone()  # Ensure idle tone is stopped
             
             if not country_code:
                 self.lcd.show_message("Timeout", "Hanging up...")
@@ -65,6 +77,8 @@ class LooperPhone:
             self.lcd.show_message("Calling:", country_name[:16])
             print(f"Calling {country_name} (+{country_code})")
             
+            # Ensure no keypad tones are playing
+            self.keypad.stop_any_tone()
             # Generate country-specific dial tone for 10 seconds
             dial_params = country_info['dial_tone']
             self.tones.generate_dial_tone(dial_params, duration=10)
@@ -76,14 +90,23 @@ class LooperPhone:
             # Play country mp3 file
             self.audio.play_country_file(country_name.lower())
             
+            # Ensure no keypad tones are playing
+            self.keypad.stop_any_tone()
             # Generate busy tone
             busy_params = country_info['busy_tone']
             self.tones.generate_busy_tone(busy_params)
             
         except Exception as e:
             print(f"Error during call: {e}")
+            # Stop all tones in case of error
+            self.keypad.stop_any_tone()
+            self.tones.stop_continuous_tone()
             self.lcd.show_message("Error", "Please hang up")
             time.sleep(2)
+        finally:
+            # Always stop all tones when call handling ends
+            self.keypad.stop_any_tone()
+            self.tones.stop_continuous_tone()
     
     def run(self):
         """Main loop"""
@@ -101,7 +124,9 @@ class LooperPhone:
                 while self.is_hook_off():
                     time.sleep(0.1)
                 
-                # Clear display after hangup
+                # Stop all tones and clear display after hangup
+                self.keypad.stop_any_tone()
+                self.tones.stop_continuous_tone()
                 self.lcd.clear()
                 print("Call ended, phone hung up")
                 time.sleep(0.5)
@@ -113,6 +138,7 @@ class LooperPhone:
     
     def cleanup(self):
         """Clean up resources"""
+        self.keypad.cleanup()
         self.tones.cleanup()
         self.lcd.cleanup()
         GPIO.cleanup()
